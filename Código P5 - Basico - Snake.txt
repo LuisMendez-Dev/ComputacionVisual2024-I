@@ -1,0 +1,175 @@
+let i = 0;
+
+function setup() {
+  createCanvas(400, 400);
+}
+
+function draw() {
+  background(255,255,255);
+  
+  drawMyRect(50, 100);
+  drawMyRect(150, 200);
+  
+  push();
+  stroke(0, 255, 0);
+  fill(0, 0, 255);
+  circle(50 + i, 100, 200);
+  
+  noStroke()
+  fill(255, 0, 0, 128);
+  ellipse(50, 100, 200, 50);
+  pop();
+  
+  colorMode(HSB, 256)
+  for(let i = 0; i < 256; i++){
+    for(let j = 0; j < 256; j++){
+      stroke(i, j, 255);
+      point(i, j);
+    }
+  }
+  noLoop()
+  
+  
+  i++;
+}
+
+function drawMyRect(x, y) {
+  rect(x, y, 200, 50);
+}
+
+------------------------------------------------------------------------------------
+
+SNAKE
+
+let snake, food, cols, rows;
+const scl = 20;
+
+function setup() {
+  createCanvas(400, 400);
+  frameRate(10)
+  
+  cols = width / scl
+  rows = height / scl
+  
+  snake = new Snake()
+  food = new Food()
+}
+
+function draw() {
+  background(0);
+  
+  food.render();
+  
+  snake.update();
+  snake.render();
+  
+  fill(255);
+  text("Score: " + snake.getLength(), 10, 10);
+}
+
+function keyPressed(){
+  if(keyCode === UP_ARROW){
+    snake.setDirection(0, -1);
+  } else if (keyCode === DOWN_ARROW){
+    snake.setDirection(0, 1);
+  } else if (keyCode === LEFT_ARROW){
+    snake.setDirection(-1, 0);
+  } else if (keyCode === RIGHT_ARROW){
+    snake.setDirection(1, 0);
+  }
+}
+
+class Snake {
+  constructor() {
+    this.position = createVector(0, 0);
+    this.direction = createVector(1, 0);
+    this.tail = [];
+    this.col = color(220, 255, 100);
+  }
+  
+  setDirection (x, y){
+    
+    if (this.direction.x === -x && this.direction.y === -y){
+      return;
+    }
+    
+    this.direction.x = x;
+    this.direction.y = y;
+  }
+  
+  eat (){
+    if (this.position.x === food.position.x && this.position.y === food.position.y){
+      this.tail.push(createVector(food.position.x, food.position.y))
+      food = new Food();
+    }
+  }
+  
+  isDeath() {
+    if (this.position.x < 0 || this.position.x >= cols || this.position.y < 0 || this.position.y >= rows){
+      return true;
+    }
+    
+    
+    
+    for(const position of this.tail){
+      if (this.position.x === position.x && this.position.y === position.y){
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  getLength(){
+    return this.tail.length;
+  }
+  
+  update (){
+    this.tail.push(createVector(this.position.x, this.position.y))
+    
+    this.tail.shift()
+    
+    this.position.add(this.direction);
+    
+    if (this.isDeath()){
+      noLoop()
+    } 
+    
+    this.eat();
+    
+  }
+  
+  render (){
+    push()
+    noStroke();
+    fill(this.col);
+    rect(this.position.x * scl, this.position.y * scl, scl, scl)
+    
+    for(const position of this.tail){
+      rect(position.x * scl, position.y * scl, scl, scl)
+    }
+    
+    pop()
+  }
+  
+}
+
+class Food {
+  constructor(){
+    this.position = this.generatePosition();
+  }
+  
+  generatePosition(){
+    return createVector(
+      floor(random(0, cols)),
+      floor(random(0, rows))
+    );
+  }
+  
+  render (){
+    push()
+    fill(255, 0, 0);
+    circle (this.position.x * scl + scl/2, this.position.y * scl + scl/2, scl);
+    pop()
+  }
+}
